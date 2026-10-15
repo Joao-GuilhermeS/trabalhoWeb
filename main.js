@@ -4,10 +4,9 @@ const bookTable = document.getElementById('tabela-livros');
 const bookList = bookTable.children[1];
 const loadingMessage = document.getElementById('loading');
 const emptyList = document.getElementById('lista-vazia');
+const titleFormInput = document.getElementById('titulo');
+const authorFormInput = document.getElementById('autor');
 const ocultoTag = 'oculto';
-
-let books = [];
-let maxId = -1;
 
 function toggleReload() {
   bookTable.classList.toggle(ocultoTag);
@@ -35,6 +34,52 @@ function insertBook(book) {
   row.appendChild(author);
 
   const actions = document.createElement('td');
+
+  const deleteButton = document.createElement('button');
+  deleteButton.textContent = 'X';
+  deleteButton.onclick = async () => {
+    await deleteBook(book.id);
+  }
+  actions.appendChild(deleteButton);
+
+  const editButton = document.createElement('button');
+  editButton.style.backgroundColor = 'orange';
+  editButton.onclick = () => {
+    const titleRowInput = document.createElement('input');
+    titleRowInput.type = 'text';
+    titleRowInput.value = book.title;
+    title.textContent = '';
+    title.appendChild(titleRowInput);
+
+    const authorRowInput = document.createElement('input');
+    authorRowInput.type = 'text';
+    authorRowInput.value = book.author;
+    author.textContent = '';
+    author.appendChild(authorRowInput);
+
+    // Fiz assim para evitar criar mais um elemnto, e eu ja vou recarregar tudo de qualquer forma
+    // faria diferente se tivesse mais tempo
+    deleteButton.style.backgroundColor = 'green';
+    deleteButton.innerHTML = '&#10004;';
+    deleteButton.onclick = async () => {
+      await editBook({
+        id: book.id,
+        titulo: titleRowInput.value,
+        autor: authorRowInput.value,
+      });
+    };
+
+    editButton.style.backgroundColor = 'red';
+    editButton.innerHTML = '&#10006;';
+    editButton.onclick = getBooks;
+  };
+  const editIcon = document.createElement('img');
+  editIcon.src = './prancheta.png';
+  editIcon.height = 12;
+  editIcon.width = 16;
+  editButton.appendChild(editIcon);
+  actions.appendChild(editButton);
+
   row.appendChild(actions);
 
   bookList.appendChild(row);
@@ -48,8 +93,6 @@ async function getBooks() {
     for (let i = 0; i < json.length; i++) {
       const book = { title: json[i].titulo, id: json[i].id, author: json[i].autor };
       insertBook(book);
-      books.push(book);
-      if (maxId < book.id) maxId = book.id;
     }
   })
     .catch(e => { console.log(e) });
@@ -61,77 +104,49 @@ async function getBooksCache() {
   for (let i = 0; i < books.length; i++) {
     insertBook(books[i]);
   }
-}
-
-async function getBook(id) {
-  const response = await fetch(APIURL + id.toString());
-
-  if (!response.ok) {
-    console.log("error");
-    return;
-    // TODO: something
-  }
-
-  const result = await response.json();
-  return result;
+  toggleReload();
 }
 
 async function postBook(book) {
   await fetch(APIURL, {
     method: "POST",
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(book),
-  }).then(blob => blob.json()).then(json => {
-    console.log(json);
-    books.push(json);
-    if (json.id > maxId) maxId = json.id;
-    getBooksCache();
-  }).catch(e => { console.log(e) });
+  }).then(getBooks).catch(e => { console.log(e) });
 }
 
-async function editBook(id, book) {
-  const response = await fetch(APIURL + id.toString(), {
+async function editBook(book) {
+  await fetch(APIURL + book.id.toString(), {
     method: "PUT",
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(book),
-  })
-
-  if (!response.ok) {
-    console.log("error");
-    return;
-    // TODO: something
-  }
-
-  for (let i = 0; i < books.length; i++) {
-    if (books[i].id === id) {
-      books[i] = book;
-    }
-  }
+  }).then(getBooks).catch(e => { console.log(e) });
 }
 
-async function deleteBook(book) {
+async function deleteBook(id) {
   await fetch(APIURL + id.toString(), {
     method: "DELETE",
-    body: JSON.stringify(book),
-  }).then(blob => blob.json()).then(json => {
-    for (let i = 0; i < books.length; i++) {
-      if (books[i].id === json.id) {
-        books.splice(i, 1);
-      }
-      cleanBooks();
-      getBooksCache();
-    }
-  })
+  }).then(getBooks)
+    .catch(e => { console.log(e) })
 }
 
+// load inicial
 getBooks();
 
 document.getElementById('livro-form').onsubmit = async (event) => {
   event.preventDefault();
   const result = {};
+  result.id = 0;
 
   const data = new FormData(event.target);
   for (const [key, value] of data.entries()) {
     result[key] = value;
   }
-  result.id = maxId + 1;
+  titleFormInput.value = '';
+  authorFormInput.value = '';
   await postBook(result);
 }
