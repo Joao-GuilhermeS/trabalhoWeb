@@ -2,9 +2,52 @@ const APIURL = 'https://livros.acilab.com.br/api/livros/';
 let books = [];
 let maxId = 0;
 
+function clearMessage() {
+  const message = document.getElementById('mensagem');
+  message.textContent = '';
+  message.className = 'oculto';
+}
+
+function showError(error) {
+  const message = document.getElementById('mensagem');
+  const errorMessage = error instanceof Error && error.message
+    ? error.message
+    : 'Ocorreu um erro. Tente novamente.';
+
+  message.textContent = errorMessage;
+  message.className = 'erro';
+  console.error(error);
+}
+
+async function requestApi(url, options) {
+  let response;
+
+  try {
+    response = await fetch(url, options);
+  } catch {
+    throw new Error('Não foi possível conectar à API. Verifique sua conexão e tente novamente.');
+  }
+
+  if (!response.ok) {
+    throw new Error(`A API retornou um erro (HTTP ${response.status}).`);
+  }
+
+  return response;
+}
+
+async function readJson(response) {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error('A API retornou uma resposta inválida. Tente novamente.');
+  }
+}
+
 function setReload() {
   // TODO: make reload
 }
+
+
 
 function cleanBooks() {
   // TODO: take out all the books currently visible
@@ -15,83 +58,88 @@ function insertBook(book) {
 }
 
 async function getBooks() {
-  setReload();
-  const response = await fetch(APIURL);
+  clearMessage();
 
-  if (!response.ok) {
-    // TODO: something
-  }
+  try {
+    setReload();
+    const response = await requestApi(APIURL);
+    const result = await readJson(response);
 
-  cleanBooks();
-  const result = await response.json();
-  for (let i = 0; i < result.length; i++) {
-    insertBook(result[i]);
-  }
-}
-
-async function getBooks(books) {
-  setReload();
-  cleanBooks();
-  for (let i = 0; i < books.length; i++) {
-    insertBook(result[i]);
+    cleanBooks();
+    for (let i = 0; i < result.length; i++) {
+      insertBook(result[i]);
+    }
+  } catch (error) {
+    showError(error);
+    throw error;
   }
 }
 
 async function getBook(id) {
-  const response = await fetch(APIURL + id.toString());
+  clearMessage();
 
-  if (!response.ok) {
-    // TODO: something
+  try {
+    const response = await requestApi(APIURL + id.toString());
+    return await readJson(response);
+  } catch (error) {
+    showError(error);
+    throw error;
   }
-
-  const result = await response.json();
-  return result;
 }
 
 async function postBook(book) {
-  const response = await fetch(APIURL, {
-    method: "POST",
-    body: JSON.stringify(book),
-  });
+  clearMessage();
 
-  if (!response.ok) {
-    // TODO: something
+  try {
+    await requestApi(APIURL, {
+      method: "POST",
+      body: JSON.stringify(book),
+    });
+
+    books.push(book);
+    await getBooks();
+  } catch (error) {
+    showError(error);
+    throw error;
   }
-
-  books.push(book);
-  await getBooks(book);
 }
 
 async function editBook(id, book) {
-  const response = await fetch(APIURL + id.toString(), {
-    method: "PUT",
-    body: JSON.stringify(book),
-  });
+  clearMessage();
 
-  if (!response.ok) {
-    // TODO: something
-  }
+  try {
+    await requestApi(APIURL + id.toString(), {
+      method: "PUT",
+      body: JSON.stringify(book),
+    });
 
-  for (let i = 0; i < books.length; i++) {
-    if (books[i].id === id) {
-      books[i] = book;
+    for (let i = 0; i < books.length; i++) {
+      if (books[i].id === id) {
+        books[i] = book;
+      }
     }
+  } catch (error) {
+    showError(error);
+    throw error;
   }
 }
 
 async function deleteBook(book) {
-  const response = await fetch(APIURL + id.toString(), {
-    method: "DELETE",
-    body: JSON.stringify(book),
-  });
+  clearMessage();
 
-  if (!response.ok) {
-    // TODO: something
-  }
+  try {
+    await requestApi(APIURL + book.id.toString(), {
+      method: "DELETE",
+      body: JSON.stringify(book),
+    });
 
-  for (let i = 0; i < books.length; i++) {
-    if (books[i].id === id) {
-      books.splice(i, 1);
+    for (let i = 0; i < books.length; i++) {
+      if (books[i].id === book.id) {
+        books.splice(i, 1);
+      }
     }
+  } catch (error) {
+    showError(error);
+    throw error;
   }
 }

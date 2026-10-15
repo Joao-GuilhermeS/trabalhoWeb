@@ -8,10 +8,21 @@
 </head>
 <body>
 
+
+  
+    <div class="pesquisa-box">
+        <h3>Pesquisar Livro</h3>
+        <div class="pesquisa-grupo">
+            <input type="text" id="input-busca" placeholder="Digite o ID ou título do livro...">
+            <button type="button" id="btn-buscar">Pesquisar</button>
+        </div>
+    </div>
+
+
     <h1>Catálogo de Livros</h1>
 
   
-    <div id="mensagem" class="oculto"></div>
+    <div id="mensagem" class="oculto" role="alert" aria-live="assertive"></div>
 
     <form id="livro-form">
         <h2 id="form-titulo">Adicionar Livro</h2>
@@ -59,6 +70,25 @@
         </tbody>
     </table>
 
-    <script src="script.js"></script>
+    <script src="main.js"></script>
+   
+
+    <!-- card  para exibir os dados retotnadps pela api -->
+    <div id="card-livro" class="card-detalhes oculto">
+        <div class="card-header-detalhes">
+            <h3>Resultado da Pesquisa</h3>
+            <button type="button" id="btn-fechar-card" class="btn-fechar" title="Fechar">&times;</button>
+        </div>
+        <div class="card-corpo">
+            <p><strong>ID:</strong> <span id="card-id">-</span></p>
+            <p><strong>Título:</strong> <span id="card-titulo">-</span></p>
+            <p><strong>Autor:</strong> <span id="card-autor">-</span></p>
+        </div>
+    </div>
+
+
+   
+    
+
 </body>
-</html>
+</html>1
