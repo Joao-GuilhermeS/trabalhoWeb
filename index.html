@@ -21,12 +21,12 @@
 
         <div>
             <label for="titulo">Título:</label>
-            <input type="text" id="titulo" placeholder="Ex: Dom Casmurro">
+            <input type="text" id="titulo" name="titulo" placeholder="Ex: Dom Casmurro">
         </div>
 
         <div>
             <label for="autor">Autor:</label>
-            <input type="text" id="autor" placeholder="Ex: Machado de Assis">
+            <input type="text" id="autor" name="autor" placeholder="Ex: Machado de Assis">
         </div>
 
         <button type="submit" id="btn-salvar">Salvar</button>
@@ -44,21 +44,20 @@
 
     ()
 
-
-    <table id="tabela-livros" class="oculto">
+    <table id="tabela-livros">
         <thead>
             
             <tr>
+                <th>Id</th>
                 <th>Título</th>
                 <th>Autor</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody id="corpo-tabela">
-
         </tbody>
     </table>
 
-    <script src="script.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
